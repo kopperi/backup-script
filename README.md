@@ -36,8 +36,8 @@ Script relies on following commands:
 
 ##What I intend to do when I have time:
 
--Add interactive rsync flag options(lightweight frontend), possibility to save configuration
--Add option to use other than encrypted volumes
--Add optional log rotation for mirror backups
--Add rotation of full backups 
+- Add interactive rsync flag options(lightweight frontend), possibility to save configuration
+- Add option to use other than encrypted volumes
+- Add optional log rotation for mirror backups
+- Add rotation of full backups 
 - Make the script a bit more flexible, e.g. remove requirement to have configuration files
