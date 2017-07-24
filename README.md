@@ -17,6 +17,7 @@ Script provides incremental, mirror and full backups by default and has some pre
 ## How to configure this?
 
 All configuration options are on top of the script, hopefully self-explanatory. To make this work you need at least two options configured:
+- Check everything under "Configuration file locations"
 - config_location #Tell script where to find list of items to backup and exclude
 - drive #Tell the script what encrypted volume to mount
 
