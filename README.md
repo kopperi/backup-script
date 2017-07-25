@@ -8,7 +8,7 @@ Script provides incremental, mirror and full backups by default and has some pre
 
 ## Who is this for?
 
-Me, and anyone else who finds himself/herself in similar situation. Anyone who wants to use this as base or part of something else. Open source community has given me much, I feel like  I can finally contribute something.
+Me, and anyone else who for reason or another can't or don't want to rely on cron jobs to do their backup, while using normal or encrypted backup media. Anyone who wants to use this as base or part of something else. Open source community has given me much, I feel like  I can finally contribute something.
 
 ## Script workflow: 
 
