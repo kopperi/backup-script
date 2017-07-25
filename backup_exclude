@@ -5,10 +5,7 @@
 /bin
 /boot
 /dev
-/initrd.img
-/initrd.img.old
 /lib
-/lib64
 /lost+found
 /media
 /mnt
