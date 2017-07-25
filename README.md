@@ -6,6 +6,10 @@ This script is a Bash backup script for nieche use-case. Essentially, script mou
 
 Script provides incremental, mirror and full backups by default and has some pre-existing automation on managing folder-structure. However, this is very basic and could be more efficient. See more details below.
 
+## Who is this for?
+
+Me, and anyone else who finds himself/herself in similar situation. Anyone who wants to use this as base or part of something else. Open source community has given me much, I feel like  I can finally contribute something.
+
 ## Script workflow: 
 
 1. Choose desired backup (Incremental, Mirror, Full)
@@ -25,8 +29,9 @@ Other than that, you are good to go. Script allows you to give additional flags 
 Since this requires sudo, I suggest you read through the script to understand what it does. I trust it since I've created it, but you shouldn't. 
 
 ## What could be done better?
-​
+
 Probably a lot. Like said, this is practice and I aim to enhance it when I have time to do so. All comments and suggestions are welcome ofcourse. The way I have come up with this is build on previous versions, and I'm sure it shows. I'd like to have any feedback that you can give on how to make it smarter and more consciece. I tried to provide as much comments as I saw necessary, maybe it became bloated. :) Script is rather verbose, I intend to fix that. 
+
 
 
 
@@ -56,7 +61,10 @@ This script has been tested successfully with Bash version 4.4.12.
 ## What I intend to do when I have time:
 
 - Add interactive rsync flag options(lightweight frontend), possibility to save configuration
-- Add option to use other than encrypted volumes
-- Add optional log rotation for mirror backups
+- Add option to use other than encrypted volumes, automatical identification of encrypted drives (LUKS) DONE
+- Add log rotation for mirror and incremental backups 
 - Add rotation of full backups 
 - Make the script a bit more flexible, e.g. remove requirement to have configuration files
+- Add check in the beginning to see whether script is run as root user DONE
+- FIX: Row 71: In case backup volume is already mounted, script does not (yet) verify whether mount point and drive label actually belong to the backup media (drive). Risk: Drive runs out of space. Current workaround: Delete created backup folder, unmount volume and restart script. 
+- IDEA: Verify that there is enough space in target media before attempting to backup. 
