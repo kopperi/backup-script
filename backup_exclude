@@ -1,3 +1,4 @@
+#Sample file for excluding stuff from backups.
 #Cache 
 *.cache/
 
