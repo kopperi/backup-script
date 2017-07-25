@@ -1,0 +1,17 @@
+#Sample file for stuff to be included in backups 
+#Home and personal files
+/home/user
+#Settings and configurations
+/etc/.bashrc
+/etc/rsyslog.conf
+/etc/rsyslog.d
+/etc/sysctl.conf
+/home/user/.bashrc
+/home/user/.bash_aliases
+/home/user/.config
+/home/user/.local
+/home/user/.profile
+#Logs
+/var/log
+/var/mail
+

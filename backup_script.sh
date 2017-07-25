@@ -15,7 +15,7 @@ grep=/bin/grep
 lsblk=/bin/lsblk
 
 #Home folder if needed
-#home=/home/user
+home=/home/user
 
 #### Configuration file locations ####
 #Script root directory (adjust accordingly)
@@ -57,21 +57,47 @@ timeout=5
 ########################################################################
 ####################### BEGINNING OF SCRIPT ############################
 
+
+#Check whether script is run as root
+if [[ "$EUID" -ne 0  ]]; then
+	echo "This script requires root privileges. Please use 'su' or 'sudo' and" \
+	"try again."
+	exit 1
+fi
+
 #Function to mount appropriate drive for backup
 function enter_volume { 
 	echo "Checking device availability."
 	#Check if already mounted. If yes, inform and continue.
-	if $mount | $grep /dev/mapper/$mount_label > /dev/null; then
-		echo Volume already mounted. Proceeding to next step. 
-		return 0 	
+	if $mount | $grep $mount_label | $grep $mount_point > /dev/null; then
+		echo "Volume already mounted."
+		return 0
 	#Check if defined drive exists in system. If yes, open volume and mount. 
-	#Continue on success. 
+	#Continue on success.
 	elif $lsblk | $grep $drive > /dev/null; then 
-	       	echo "OK. Opening encrypted volume."; 
-		$cryptsetup luksOpen /dev/$drive $mount_label ;
-		echo "OK. Mounting volume /dev/$drive to $mount_point.";
-		$mount /dev/mapper/$mount_label $mount_point;
-		echo "Volume mounting successful, backup media ready." && return 0;
+	       	echo "Drive found in system. Accessing volume."; 
+		#Check, if the drive in question is and encrypted volume before
+		#opening it.
+		if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then
+			#Check whether the volume is already open. 
+			if $lsblk --fs | grep $mount_label > /dev/null; then
+				echo "Volume already open, mounting."
+				$mount /dev/mapper/$mount_label $mount_point
+				return 0
+			#If not open yet, open and mount.
+			else
+				echo "Encrypted volume found, proceeding to mount."
+				$cryptsetup luksOpen /dev/$drive $mount_label
+				$mount /dev/mapper/$mount_label $mount_point
+				return 0
+			fi
+		#If there is no crypto_LUKS label with appropriate drive label,
+		#volume is either unaencrypted or not supported. Attempt to mount.	
+		else 
+			echo "Volume is not encrypted, proceeding to mount."
+		 	$mount /dev/$drive $mount_point
+		        return 0
+		fi
 	#If target drive does not exist, inform and exit with error.
 	else 
 		echo "Defined drive /dev/$drive cannot be found in system. Please check" \
@@ -97,10 +123,13 @@ function exit_dialogue {
 
 #Function to unmount encrypted volume and close it.
 function unmount_volume {
-	echo $'\n'"Unmounting $mount_point."
-	$umount $mount_point && echo "Closing encrypted volume.";
-	$cryptsetup luksClose $mount_label
-	echo "Success."$'\n'"Backup finished successfully.";
+	echo $'\n'"Unmounting $drive from $mount_point."
+	$umount $mount_point
+	if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then 
+		echo "Closing encrypted volume."
+		$cryptsetup luksClose $mount_label
+	fi	
+	echo "Success."$'\n'"Backup finished successfully."
 	exit 0
 }
 
@@ -108,7 +137,7 @@ function unmount_volume {
 #not match the current selection of files in directories defined in --files-from will be 
 #deleted. This backup uses separate folder, labeled 'backup_mirror'
 function do_mirror {
-	enter_volume;	#Mount backup volume
+	enter_volume;
 
 	#Go to defined backup root directory and check whether there is already a folder.
 	cd $backup_root_dir; local backup_dir_mirr=$backup_root_dir/backup_mirror
@@ -135,7 +164,7 @@ function do_mirror {
 #newer versions and files with no matches in current system are retained as well.
 #Separate folder is used, labeled as 'backup_incremental'
 function do_incremental {
-	enter_volume;	#Mount backup volume
+	enter_volume;
 
 	#Go to defined backup root directory and check whether there is already a folder.
 	cd $backup_root_dir; local backup_dir_incr=$backup_root_dir/backup_incremental
@@ -164,7 +193,7 @@ function do_incremental {
 #2. Quit script (nothing will be changed)
 #3. Remove old backup and recreate full backup. CAREFUL
 function do_full {
-	enter_volume;	#Mount backup volume
+	enter_volume;	
 	
 	#Go to defined backup root directory and check whether there is already a folder
 	cd $backup_root_dir; local backup_dir_full=$backup_root_dir/$(date +'backup_full_%d%m%y')
@@ -193,18 +222,13 @@ function do_full {
 
 				else
 					echo "Required input not provided, aborting."
-					exit_volume;
+					exit_dialogue;
 				fi 
-				
-		#Abort with q or empty. Show dialogue when exiting.
-	        elif [[ $choice == "q" ]] || [[ $# -eq 0  ]]; then
+
+		#Abort with any other input, including 'q'. 
+	        else
 		       echo "Aborting by user decision."
 		       cd && exit_dialogue;
-
-		#Abort with any other input. Don't show dialogue when exiting. 
-	        else
-		       echo "Invalid choice. :( Aborting."
-		       cd && exit_volume;
 	        fi
 	fi
 
@@ -217,7 +241,7 @@ function do_full {
 	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_full \
 	--log-file=$log_file || true;
 	cd && echo "File transfer completed successfully.";
-	exit_dialogue;	#After backup proceed to exit dialogue.
+	exit_dialogue;	
 }
 
 #Initial menu for backup script. 
