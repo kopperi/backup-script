@@ -67,35 +67,39 @@ fi
 
 #Function to mount appropriate drive for backup
 function enter_volume { 
-	echo "Checking device availability."
+	echo -n "Checking device availability.   "
 	#Check if already mounted. If yes, inform and continue.
 	if $mount | $grep $mount_label | $grep $mount_point > /dev/null; then
-		echo "Volume already mounted."
+		echo -n "Already mounted.   "; echo "[OK]"; 
 		return 0
 	#Check if defined drive exists in system. If yes, open volume and mount. 
 	#Continue on success.
 	elif $lsblk | $grep $drive > /dev/null; then 
-	       	echo "Drive found in system. Accessing volume."; 
+		echo "[OK]";  
 		#Check, if the drive in question is and encrypted volume before
 		#opening it.
 		if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then
 			#Check whether the volume is already open. 
 			if $lsblk --fs | grep $mount_label > /dev/null; then
-				echo "Volume already open, mounting."
-				$mount /dev/mapper/$mount_label $mount_point
+				echo -n "Volume already open, mounting.   "
+				$mount /dev/mapper/$mount_label $mount_point; 
+				echo "[OK]";
 				return 0
 			#If not open yet, open and mount.
 			else
-				echo "Encrypted volume found, proceeding to mount."
+				echo "Encrypted volume found, opening.   "
 				$cryptsetup luksOpen /dev/$drive $mount_label
+				echo -n "Mounting.   "
 				$mount /dev/mapper/$mount_label $mount_point
+				echo "[OK]";
 				return 0
 			fi
 		#If there is no crypto_LUKS label with appropriate drive label,
 		#volume is either unaencrypted or not supported. Attempt to mount.	
 		else 
-			echo "Volume is not encrypted, proceeding to mount."
+			echo -n "Volume is not encrypted, mounting.   "
 		 	$mount /dev/$drive $mount_point
+			echo "[OK]"
 		        return 0
 		fi
 	#If target drive does not exist, inform and exit with error.
@@ -123,13 +127,13 @@ function exit_dialogue {
 
 #Function to unmount encrypted volume and close it.
 function unmount_volume {
-	echo $'\n'"Unmounting $drive from $mount_point."
-	$umount $mount_point
+	echo -n $'\n'"Unmounting $drive from $mount_point.   "
+	$umount $mount_point; echo "[OK]"
 	if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then 
-		echo "Closing encrypted volume."
-		$cryptsetup luksClose $mount_label
+		echo -n "Closing encrypted volume.   "
+		$cryptsetup luksClose $mount_label; echo "[OK]"
 	fi	
-	echo "Success."$'\n'"Backup finished successfully."
+	echo "Backup successful, exiting."
 	exit 0
 }
 
@@ -144,7 +148,7 @@ function do_mirror {
 
 	#Create the folder, if not found.
 	if [[ ! -d $backup_dir_mirr ]]; then
-		echo "Directory not present, creating..."
+		echo -n  "Directory not present, creating..."
 	        $mkdir $backup_dir_mirr && cd;
        	fi 	       
 	
@@ -152,10 +156,10 @@ function do_mirror {
 	local log_file=$backup_dir_mirr/$(date +'backup_log_mirror_%d%m%y')
 	#Perform backup. "True" in the end will allow script to continue even when rsync 
 	#gives errors (such as inaccessible files).
-	echo Ready to start.$'\n'Backing up...
+	echo "Backing up."
 	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_mirr \
 	--log-file=$log_file --delete || true;
-	cd && echo "File transfer completed successfully."
+	cd && echo "Transfer completed successfully."
 	exit_dialogue;	#After backup proceed to exit dialogue.
 }
 
@@ -180,10 +184,10 @@ function do_incremental {
 
 	#Perform backup. "True" in the end will allow script to continue even when rsync
        	#returns errors (such aseinaccessible files).
-	echo Ready to start.$'\n'Backing up...
+	echo "Backing up."
 	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_incr \
 	--log-file=$log_file || true;
-	cd && echo "File transfer completed successfully."
+	cd && echo "Transfer completed successfully."
 	exit_dialogue;	#After backup proceed to exit dialogue.
 }
 #Full backup. This function creates new folder to defined backup directory with date label. 
@@ -237,10 +241,10 @@ function do_full {
 
 	#Perform backup. "True" in the end will allow script to continue even when rsync
        	#returns errors (such as inaccessible files).
-	echo "Ready to start."$'\n'"Backing up..."
+	echo "Backing up."
 	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_full \
 	--log-file=$log_file || true;
-	cd && echo "File transfer completed successfully.";
+	cd && echo "Transfer completed successfully.";
 	exit_dialogue;	
 }
 
