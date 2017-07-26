@@ -33,7 +33,7 @@ function enter_volume() {
 			#If not open yet, open and mount.
 			else
 				echo "Encrypted volume found, opening.   "
-				$cryptsetup luksOpen /dev/$drive $mount_label
+				$cryptsetup open --type luks /dev/$drive $mount_label
 				echo -n "Mounting.   "
 				$mount /dev/mapper/$mount_label $mount_point
 				echo "[OK]";
@@ -76,7 +76,7 @@ function unmount_volume() {
 	$umount $mount_point; echo "[OK]"
 	if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then 
 		echo -n "Closing encrypted volume.   "
-		$cryptsetup luksClose $mount_label; echo "[OK]"
+		$cryptsetup close $mount_label; echo "[OK]"
 	fi	
 	echo "Backup successful, exiting."
 	exit 0
