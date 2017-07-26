@@ -8,7 +8,7 @@ Script provides incremental, mirror and full backups by default and has some pre
 
 ## Who is this for?
 
-Me, and anyone else who for reason or another can't or don't want to rely on cron jobs to do their backup, while using normal or encrypted backup media. Anyone who wants to use this as base or part of something else. Open source community has given me much, I feel like  I can finally contribute something.
+Me, and anyone else who for reason or another can't or don't want to rely on cron jobs to do their backup, while using normal or encrypted backup media. Anyone who wants to use this as base or part of something else. 
 
 ## Script workflow: 
 
@@ -65,7 +65,9 @@ This script has been tested successfully with Bash version 4.4.12.
 - Add option to use other than encrypted volumes, automatical identification of encrypted drives (LUKS) DONE
 - Add log rotation for mirror and incremental backups 
 - Add rotation of full backups 
-- Make the script a bit more flexible, e.g. remove requirement to have configuration files
+- Separate functions and configuration parameters to own files for easier maintenance. DONE
+- Check that necessary files exist before attempting to launch script. DONE
+- Make the script a bit more flexible, e.g. remove requirement to have configuration files DONE
 - Add check in the beginning to see whether script is run as root user DONE
 - FIX: Row 71: In case backup volume is already mounted, script does not (yet) verify whether mount point and drive label actually belong to the backup media (drive). Risk: Drive runs out of space. Current workaround: Delete created backup folder, unmount volume and restart script. 
 - IDEA: Verify that there is enough space in target media before attempting to backup. 
