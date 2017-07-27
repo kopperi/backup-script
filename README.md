@@ -2,9 +2,9 @@
 
 ## What is this and why does this exist.
 
-This script is a Bash backup script for nieche use-case. Essentially, script mounts an encrypted volume with cryptsetup and performs rsync backup according to users likings (by giving a couple of options). This has been created, first and foremost, practice. This started as a mere attempt to automate mounting, backing up and unmounting encrypted volumes and now it's something more (not much but still). 
+This script is a Bash backup script for nieche use-case. Essentially, script mounts volume, performs rsync backup based on configured parameters and couple of choises given in script. This has been created, first and foremost, for practice. This started as a mere attempt to automate mounting, backing up and unmounting encrypted volumes and now it's something more (not much but still). 
 
-Script provides incremental, mirror and full backups by default and has some pre-existing automation on managing folder-structure. However, this is very basic and could be more efficient. See more details below.
+Script provides incremental, mirror and full backups by default and has some pre-existing automation on managing folder-structure. See more details below.
 
 ## Who is this for?
 
@@ -12,62 +12,39 @@ Me, and anyone else who for reason or another can't or don't want to rely on cro
 
 ## Script workflow: 
 
-1. Choose desired backup (Incremental, Mirror, Full)
-2. Mount a defined encrypted drive with cryptsetup.
-3. Check whether folders exist and either create them, update them or let user decide what to do.
-4. Use rsync to perform actual backup based on configured parameters and chosen rsyn flags.
+1. Choose desired backup (Incremental, Mirror, Full) or Quit
+2. Identify whether target volume is encrypted or non-encrypted.
+2. Mount a defined drive with cryptsetup or just mount.
+3. Check whether folders exist and either create them, based on chosen backup type  update them or let user decide what to do.
+4. Use rsync to perform actual backup based on configured parameters and rsync flags in backup.config.
 5. After successful backup, let's user choose whether to leave backup drive mounted or unmount it. 
 
 ## How to configure this?
 
-All configuration options are on top of the script, hopefully self-explanatory. To make this work you need at least two options configured:
-- Check everything under "Configuration file locations"
-- config_location #Tell script where to find list of items to backup and exclude
-- drive #Tell the script what encrypted volume to mount
-
-Other than that, you are good to go. Script allows you to give additional flags to rsync and with a little bit of tweaking, you can basically use any rsync flag you want.
+All configuration parameters are located in file backup.config. Following sections should be checked before attempting to use the script: 
+- FOLDERS AND FILES
+- BACKUP MEDIA 
+Instructions are included in the file for each parameter. Other than that, you should be good to go. You can fully control rsync flags in configuration file. 
 
 Since this requires sudo, I suggest you read through the script to understand what it does. I trust it since I've created it, but you shouldn't. 
 
 ## What could be done better?
 
-Probably a lot. Like said, this is practice and I aim to enhance it when I have time to do so. All comments and suggestions are welcome ofcourse. The way I have come up with this is build on previous versions, and I'm sure it shows. I'd like to have any feedback that you can give on how to make it smarter and more consciece. I tried to provide as much comments as I saw necessary, maybe it became bloated. :) Script is rather verbose, I intend to fix that. 
-
-
+Probably a lot. Like said, this is practice and I aim to enhance it when I have time to do so. All comments, suggestions and contributions are welcome ofcourse. The way I have come up with this is build on previous versions, and I'm sure it shows. I'd like to have any feedback that you can give on how to make it smarter and more concise. I tried to provide as much comments as I saw necessary, maybe it became bloated. :)
 
 
 ## What doest this require to work?
 This script requires superuser privileges (sudo or root) to mount volumes, to backup . Password for encrypted volume will be asked after step 2. It cannot be used as cron job since it requires user interaction. 
-Script relies on following commands: 
-
-/bin/mkdir/
-
-/bin/mount
-
-/bin/umount
-
-/sbin/cryptsetup
-
-/usr/bin/rsync
-
-/bin/rm
-
-/bin/grep
-
-/bin/lsblk
+Script relies on rsync and cryptsetup. All other tools are part of standard OS installation (GNU\Linux) 
 
 This script has been tested successfully with Bash version 4.4.12.
 
 
 ## What I intend to do when I have time:
 
-- Add interactive rsync flag options(lightweight frontend), possibility to save configuration
-- Add option to use other than encrypted volumes, automatical identification of encrypted drives (LUKS) DONE
-- Add log rotation for mirror and incremental backups 
-- Add rotation of full backups 
-- Separate functions and configuration parameters to own files for easier maintenance. DONE
-- Check that necessary files exist before attempting to launch script. DONE
-- Make the script a bit more flexible, e.g. remove requirement to have configuration files DONE
-- Add check in the beginning to see whether script is run as root user DONE
+- Log rotation for mirror and incremental backups 
+- Rotation of full backups 
+- Verify that there is enough space in target media before attempting to backup. 
+- Support for easier rsync to remote location (can be done now by adding needed parameters to rsync flags in backup.config) 
 - FIX: Row 71: In case backup volume is already mounted, script does not (yet) verify whether mount point and drive label actually belong to the backup media (drive). Risk: Drive runs out of space. Current workaround: Delete created backup folder, unmount volume and restart script. 
-- IDEA: Verify that there is enough space in target media before attempting to backup. 
+- IDEA: Interactive rsync flag options(lightweight frontend), possibility to save configuration
