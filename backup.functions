@@ -15,7 +15,7 @@ function enter_volume() {
 	echo -n "Checking device availability."
 	#Check if already mounted. If yes, inform and continue.
 	if $mount | $grep $mount_label | $grep $mount_point > /dev/null; then
-		echo -n "Already mounted.   "; echo -e '\t'"[OK]"; 
+		echo -n "Already mounted."; echo -e '\t'"[OK]"; 
 		return 0
 	#Check if defined drive exists in system. If yes, open volume and mount. 
 	#Continue on success.
