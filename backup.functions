@@ -12,44 +12,43 @@ set -e
 
 #Function to mount appropriate drive for backup
 function enter_volume() { 
-	echo -n "Checking device availability.   "
+	echo -n "Checking device availability."
 	#Check if already mounted. If yes, inform and continue.
 	if $mount | $grep $mount_label | $grep $mount_point > /dev/null; then
-		echo -n "Already mounted.   "; echo "[OK]"; 
+		echo -n "Already mounted."; echo -e '\t'"[OK]"; 
 		return 0
 	#Check if defined drive exists in system. If yes, open volume and mount. 
 	#Continue on success.
 	elif $lsblk | $grep $drive > /dev/null; then 
-		echo "[OK]";  
+		echo -e '\t'"[OK]";  
 		#Check, if the drive in question is and encrypted volume before
 		#opening it.
 		if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then
 			#Check whether the volume is already open. 
 			if $lsblk --fs | grep $mount_label > /dev/null; then
-				echo -n "Volume already open, mounting.   "
-				$mount /dev/mapper/$mount_label $mount_point; 
-				echo "[OK]";
+				echo -n " Volume already open, mounting."
+				$mount /dev/mapper/$mount_label $mount_point && \ 
+				echo -e '\t'"[OK]";
 				return 0
 			#If not open yet, open and mount.
 			else
-				echo "Encrypted volume found, opening.   "
-				$cryptsetup open --type luks /dev/$drive $mount_label
-				echo -n "Mounting.   "
-				$mount /dev/mapper/$mount_label $mount_point
-				echo "[OK]";
+				echo "Encrypted volume found, opening."
+				$cryptsetup open --type luks /dev/$drive $mount_label 
+				echo -n "Mounting."
+				$mount /dev/mapper/$mount_label $mount_point && \
+				echo -e '\t' "[OK]";
 				return 0
 			fi
 		#If there is no crypto_LUKS label with appropriate drive label,
 		#volume is either unaencrypted or not supported. Attempt to mount.	
 		else 
-			echo -n "Volume is not encrypted, mounting.   "
-		 	$mount /dev/$drive $mount_point
-			echo "[OK]"
+			echo -n "Volume is not encrypted, mounting."
+		 	$mount /dev/$drive $mount_point && echo -e '\t'"[OK]";
 		        return 0
 		fi
 	#If target drive does not exist, inform and exit with error.
 	else 
-		echo "Defined drive /dev/$drive cannot be found in system. Please check" \
+		echo "Defined drive /dev/$drive cannot be found in system. Please check"\
 		"the configuration. Exiting script."	
 		exit 1;
 	fi
@@ -72,11 +71,12 @@ function exit_dialogue() {
 
 #Function to unmount encrypted volume and close it.
 function unmount_volume() {
-	echo -n $'\n'"Unmounting $drive from $mount_point.   "
-	$umount $mount_point; echo "[OK]"
+	echo -n $'\n'"Unmounting $drive from $mount_point."
+	cd; $umount $mount_point && echo -e '\t'"[OK]";
+	#If volume is encrypted volume, close it.
 	if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then 
-		echo -n "Closing encrypted volume.   "
-		$cryptsetup close $mount_label; echo "[OK]"
+		echo -n "Closing encrypted volume."
+		$cryptsetup close $mount_label && echo -e '\t'"[OK]"
 	fi	
 	echo "Backup successful, exiting."
 	exit 0
@@ -89,18 +89,16 @@ function backup_mirror() {
 	enter_volume;
 	#Check whether there is already a folder. Create the folder, if not found.
 	if [[ ! -d $backup_dir_mirr ]]; then
-		echo -n  "Creating directory.   "
-	        $mkdir $backup_dir_mirr && cd; echo "[OK]"
+		echo -n  "Creating directory."
+	        $mkdir $backup_dir_mirr && echo -e '\t'"[OK]";
        	fi 	       
 	
-	#Define log file for this backup
-	local log_file=$log_path_mirr/$log_syntax_mirr
 	#Perform backup. "True" in the end will allow script to continue even when rsync 
 	#gives errors (such as inaccessible files).
 	echo "Backing up."
-	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_mirr \
-	--log-file=$log_file --delete || true;
-	cd && echo "Transfer completed successfully."
+	$rsync $flags_mirr --exclude-from=$exclude --files-from=$include / $backup_dir_mirr \
+	--log-file=$log_file_mirr || true;
+	echo "Transfer completed successfully."
 	exit_dialogue;	#After backup proceed to exit dialogue.
 }
 
@@ -113,19 +111,16 @@ function backup_incremental() {
 	enter_volume;
 	#Check whether there is already a folder. Create the folder, if not found.
 	if [[ ! -d $backup_dir_incr ]]; then
-		echo -n "Creating directory.   "
-	        $mkdir $backup_dir_incr && cd; echo "[OK]"
+		echo -n "Creating directory."
+	        $mkdir $backup_dir_incr && echo -e '\t'"[OK]";
        	fi 	       
 	
-	#Define log file for this backup
-	local log_file=$log_path_incr/$log_syntax_incr
-
 	#Perform backup. "True" in the end will allow script to continue even when rsync
        	#returns errors (such aseinaccessible files).
 	echo "Backing up."
-	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_incr \
-	--log-file=$log_file || true;
-	cd && echo "Transfer completed successfully."
+	$rsync $flags_incr --exclude-from=$exclude --files-from=$include / $backup_dir_incr \
+	--log-file=$log_file_incr || true;
+	echo "Transfer completed successfully."
 	exit_dialogue;	#After backup proceed to exit dialogue.
 }
 
@@ -142,29 +137,28 @@ function backup_full() {
 	enter_volume;	
 	#Check whether there is already a folder. Create the folder, if not found.
 	if [[ ! -d $backup_dir_full ]]; then
-		echo "Creating directory.   "
-		$mkdir $backup_dir_full && cd; echo "[OK]" 
+		echo -n "Creating directory.   "
+		$mkdir $backup_dir_full && echo -e '\t'"[OK]"; 
 	#If defined folder already exists, user is given options.	
 	else
-		echo "Defined folder already exist. Want to (u)pdate backup (same than" \ 
-		"incremental), (q)uit or (re)move and recreate (u/Q/re)"
-		read choice 
+		echo -n "Defined folder already exist. Want to (u)pdate backup" \
+		"(same than incremental), (q)uit or (re)move and recreate (u/Q/re): "
+		read choice;
 		#When update is selected, perform mirror backup on existing full backup.
 		#I.e. all changes to files will be updated.
 		if [[ $choice == "u" ]]; then
 			echo Update chosen.
-		        cd;
 
 		#If user chooses the remove option, additional confirmation required to proceed. 
 		elif [[ $choice == "re"  ]]; then
-			echo "Absolutely sure? Type 'remove' in capital letters to proceed."
-			read confirmation 
+			read -p "Absolutely sure? Type 'remove' in capital letters to proceed: " \
+			confirmation;
 				#If confirmation is successful, remove folder
 				if [[ $confirmation == "REMOVE" ]]; then
-					echo "Removing old backup $backup_dir_full"; 
-					$rm -rf $backup_dir_full			
-					echo "Recreating folder"; $mkdir $backup_dir_full && cd;
-
+					echo -n "Removing old backup $backup_dir_full"; 
+					$rm -rf $backup_dir_full && echo -e '\t'"[OK]";
+					echo -n "Recreating folder"; $mkdir $backup_dir_full;
+					echo -e '/t'"[OK)";
 				else
 					echo "Required input not provided, aborting."
 					exit_dialogue;
@@ -177,14 +171,11 @@ function backup_full() {
 	        fi
 	fi
 
-	#Define log file for this backup
-	local log_file=$log_path_full/$log_syntax_full
-
 	#Perform backup. "True" in the end will allow script to continue even when rsync
        	#returns errors (such as inaccessible files).
 	echo "Backing up."
-	$rsync $flags --exclude-from=$exclude --files-from=$include / $backup_dir_full \
-	--log-file=$log_file || true;
-	cd && echo "Transfer completed successfully.";
+	$rsync $flags_full --exclude-from=$exclude --files-from=$include / $backup_dir_full \
+	--log-file=$log_file_full || true;
+	echo "Transfer completed successfully.";
 	exit_dialogue;	
 }
