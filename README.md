@@ -28,6 +28,12 @@ Instructions are included in the file for each parameter. Other than that, you s
 
 Since this requires sudo, I suggest you read through the script to understand what it does. I trust it since I've created it, but you shouldn't. 
 
+## How to use this
+
+After you have set setup backup.config according to your liking, run the script with ./backup.sh. I think the easiest way to use it is alias. E.g. this in ~/.bash_aliases file:
+
+alias backup='cd /home/user/folder/where/script/is; sudo ./backup.sh; cd;'
+
 ## What could be done better?
 
 Probably a lot. Like said, this is practice and I aim to enhance it when I have time to do so. All comments, suggestions and contributions are welcome ofcourse. The way I have come up with this is build on previous versions, and I'm sure it shows. I'd like to have any feedback that you can give on how to make it smarter and more concise. I tried to provide as much comments as I saw necessary, maybe it became bloated. :)
