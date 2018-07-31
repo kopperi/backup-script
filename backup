@@ -1,5 +1,6 @@
-#!/bin/bash
-set -e 
+#!/usr/bin/env bash
+set -o errexit
+set -o pipefail
 
 #Source configuration and other files
 . backup.config
