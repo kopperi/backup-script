@@ -13,10 +13,10 @@ set -o pipefail
 
 #Function to mount appropriate drive for backup
 function enter_volume() { 
-	echo -n "Checking device availability."
+	printf "Checking device availability.\n"
 	#Check if already mounted. If yes, inform and continue.
 	if $mount | $grep $mount_label | $grep $mount_point > /dev/null; then
-		echo -n "Already mounted."; echo -e '\t'"[OK]"; 
+		printf "Already mounted.\t[OK]\n"
 		return 0
 	#Check if defined drive exists in system. If yes, open volume and mount. 
 	#Continue on success.
@@ -27,24 +27,24 @@ function enter_volume() {
 		if $lsblk --fs | grep $drive | grep 'crypto_LUKS' > /dev/null; then
 			#Check whether the volume is already open. 
 			if $lsblk --fs | grep $mount_label > /dev/null; then
-				echo -n " Volume already open, mounting."
+				printf "Volume already open, mounting."
 				$mount /dev/mapper/$mount_label $mount_point && \ 
-				echo -e '\t'"[OK]";
+				printf "\t[OK]\n";
 				return 0
 			#If not open yet, open and mount.
 			else
-				echo "Encrypted volume found, opening."
+				printf "Encrypted volume found, opening.\n"
 				$cryptsetup open --type luks /dev/$drive $mount_label 
-				echo -n "Mounting."
+				printf "Mounting."
 				$mount /dev/mapper/$mount_label $mount_point && \
-				echo -e '\t' "[OK]";
+				printf "\t[OK]\n"
 				return 0
 			fi
 		#If there is no crypto_LUKS label with appropriate drive label,
 		#volume is either unaencrypted or not supported. Attempt to mount.	
 		else 
-			echo -n "Volume is not encrypted, mounting."
-		 	$mount /dev/$drive $mount_point && echo -e '\t'"[OK]";
+			printf "Volume is not encrypted, mounting."
+		 	$mount /dev/$drive $mount_point && printf "\t[OK]\n";
 		        return 0
 		fi
 	#If target drive does not exist, inform and exit with error.
